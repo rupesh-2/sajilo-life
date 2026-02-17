@@ -1,22 +1,38 @@
 {
-  "name": "sajilo-life",
-  "version": "1.0.0",
-  "main": "index.ts",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
-  },
-  "dependencies": {
-    "expo": "~54.0.33",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
-  },
-  "private": true
+    "name": "mini-delivery-app",
+    "version": "1.0.0",
+    "main": "expo-router/entry",
+    "scripts": {
+        "start": "expo start",
+        "android": "expo start --android",
+        "ios": "expo start --ios",
+        "web": "expo start --web",
+        "test": "jest"
+    },
+    "dependencies": {
+        "expo": "~50.0.0",
+        "expo-status-bar": "~1.11.1",
+        "react": "18.2.0",
+        "react-native": "0.73.0",
+        "zustand": "^4.5.0",
+        "axios": "^1.6.0",
+        "firebase": "^10.8.0",
+        "react-native-mmkv": "^2.11.0",
+        "expo-router": "~3.4.7",
+        "expo-linking": "~6.2.2",
+        "expo-constants": "~15.4.5",
+        "react-native-safe-area-context": "4.8.2",
+        "react-native-screens": "~3.29.0",
+        "@tanstack/react-query": "^5.0.0",
+        "clsx": "^2.1.0",
+        "tailwind-merge": "^2.2.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.20.0",
+        "@types/react": "~18.2.45",
+        "typescript": "^5.1.3",
+        "jest": "^29.2.1",
+        "jest-expo": "~50.0.0"
+    },
+    "private": true
 }
