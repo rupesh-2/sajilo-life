@@ -1,0 +1,67 @@
+name: Mini Delivery App CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-typecheck:
+    name: Lint, Type Check & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔍 Lint project
+        run: npm run lint
+
+      - name: 🛡️ Type check
+        run: npm run typecheck
+
+      - name: 🧪 Run tests
+        run: npm run test
+
+  build:
+    name: Build (EAS)
+    needs: lint-and-typecheck
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: 🏗 Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🚀 Build for Expo (Prebuild)
+        run: npx expo prebuild --platform all
+
+      - name: 🛠️ Build Archive (EAS Build - Dry Run / Optional)
+        run: |
+          echo "To fully build, set up EAS and run: eas build --platform all --non-interactive"
+          # Example of an actual build command (commented out to avoid consumption of EAS credits automatically)
+          # eas build --platform android --profile preview --non-interactive

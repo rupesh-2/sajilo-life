@@ -1,7 +1,7 @@
 
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
-import { useAuthStore } from '../src/app/store/authStore';
+import { useAuthStore } from '../src/core/store/authStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
