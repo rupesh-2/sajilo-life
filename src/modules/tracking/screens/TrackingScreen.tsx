@@ -1,9 +1,16 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Polyline, MapViewProps } from 'react-native-maps';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useTrackingStore } from '../../../core/store/trackingStore';
 import { Coordinates } from '../../../types/globalTypes';
+import { colors } from '../../../core/theme/colors';
+import { spacing, borderRadius } from '../../../core/theme/spacing';
+import { typography } from '../../../core/theme/typography';
+import { AppCard } from '../../shared/components/AppCard';
+import { AppButton } from '../../shared/components/AppButton';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const INITIAL_REGION = {
     latitude: 40.7128,
@@ -12,7 +19,6 @@ const INITIAL_REGION = {
     longitudeDelta: 0.05,
 };
 
-// Simulated route coordinates
 const MOCK_ROUTE: Coordinates[] = [
     { latitude: 40.7128, longitude: -74.0060 },
     { latitude: 40.7150, longitude: -74.0080 },
@@ -22,10 +28,13 @@ const MOCK_ROUTE: Coordinates[] = [
     { latitude: 40.7280, longitude: -74.0200 },
 ];
 
+const DESTINATION = MOCK_ROUTE[MOCK_ROUTE.length - 1];
+
 export const TrackingScreen = () => {
     const { vehicleLocation, setVehicleLocation, isTracking, startTracking, stopTracking } = useTrackingStore();
     const [routeIndex, setRouteIndex] = useState(0);
     const mapRef = useRef<MapView>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (!vehicleLocation) {
@@ -43,7 +52,6 @@ export const TrackingScreen = () => {
                     const nextCoords = MOCK_ROUTE[next];
                     setVehicleLocation(nextCoords);
 
-                    // Smoothly animate map to follow marker
                     mapRef.current?.animateToRegion({
                         ...nextCoords,
                         latitudeDelta: 0.02,
@@ -52,7 +60,7 @@ export const TrackingScreen = () => {
 
                     return next;
                 });
-            }, 3000); // Update every 3 seconds
+            }, 3000);
         }
 
         return () => clearInterval(interval);
@@ -64,81 +72,174 @@ export const TrackingScreen = () => {
                 ref={mapRef}
                 style={styles.map}
                 initialRegion={INITIAL_REGION}
+                customMapStyle={MAP_STYLE}
             >
+                {/* Destination Marker */}
+                <Marker coordinate={DESTINATION}>
+                    <View style={styles.destMarker}>
+                        <Ionicons name="location" size={24} color={colors.error} />
+                    </View>
+                </Marker>
+
+                {/* Vehicle Marker */}
                 {vehicleLocation && (
                     <Marker
                         coordinate={vehicleLocation}
                         title="Delivery Vehicle"
-                        description="On the way to destination"
+                        description="Professional courier on the way"
                     >
-                        <View style={styles.markerContainer}>
-                            <Text style={styles.markerEmoji}>🚚</Text>
+                        <View style={styles.vehicleMarker}>
+                            <MaterialCommunityIcons name="moped" size={20} color={colors.text.inverse} />
                         </View>
                     </Marker>
                 )}
+
                 <Polyline
                     coordinates={MOCK_ROUTE}
-                    strokeColor="#2196F3"
-                    strokeWidth={3}
-                    lineDashPattern={[5, 5]}
+                    strokeColor={colors.primary}
+                    strokeWidth={4}
+                    lineDashPattern={[1, 0]}
+                    lineCap="round"
+                    lineJoin="round"
                 />
             </MapView>
 
-            <View style={styles.overlay}>
-                <View style={styles.card}>
-                    <Text style={styles.statusTitle}>
-                        {isTracking ? 'Delivery in Progress' : 'Tracking Paused'}
-                    </Text>
-                    <Text style={styles.locationText}>
-                        Current: {vehicleLocation?.latitude.toFixed(4)}, {vehicleLocation?.longitude.toFixed(4)}
-                    </Text>
+            <SafeAreaView style={styles.overlayContainer} pointerEvents="box-none">
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => router.back()}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+                </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={[styles.button, isTracking ? styles.stopButton : styles.startButton]}
+                <AppCard style={styles.statusCard}>
+                    <View style={styles.cardHeader}>
+                        <View style={styles.statusBadgeContainer}>
+                            <View style={[styles.statusDot, { backgroundColor: isTracking ? colors.success : colors.secondary }]} />
+                            <Text style={styles.statusTitle}>
+                                {isTracking ? 'Courier is Moving' : 'Tracking Paused'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Estimated Arrival</Text>
+                            <Text style={styles.infoValue}>12:45 PM</Text>
+                        </View>
+                        <View style={styles.dividerVertical} />
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Status</Text>
+                            <Text style={styles.infoValue}>{isTracking ? 'On Track' : 'Stationary'}</Text>
+                        </View>
+                    </View>
+
+                    <AppButton
+                        title={isTracking ? 'Pause Tracking' : 'Resume Tracking'}
                         onPress={isTracking ? stopTracking : startTracking}
-                    >
-                        <Text style={styles.buttonText}>
-                            {isTracking ? 'Stop Tracking' : 'Start Tracking'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+                        variant={isTracking ? 'outline' : 'primary'}
+                        icon={<Ionicons name={isTracking ? 'pause' : 'play'} size={18} color={isTracking ? colors.primary : colors.text.inverse} />}
+                        style={styles.actionButton}
+                    />
+                </AppCard>
+            </SafeAreaView>
         </View>
     );
 };
 
+const MAP_STYLE = [
+    {
+        "featureType": "poi",
+        "stylers": [{ "visibility": "off" }]
+    }
+];
+
 const styles = StyleSheet.create({
     container: { flex: 1 },
     map: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
-    overlay: {
+    overlayContainer: {
         position: 'absolute',
-        bottom: 50,
-        left: 20,
-        right: 20
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        padding: spacing.lg,
+        justifyContent: 'space-between',
     },
-    card: {
-        backgroundColor: '#fff',
-        padding: 20,
-        borderRadius: 15,
-        elevation: 5,
-        shadowColor: '#000',
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.background.paper,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
-    statusTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-    locationText: { color: '#666', marginBottom: 15 },
-    button: { padding: 15, borderRadius: 10, alignItems: 'center' },
-    startButton: { backgroundColor: '#4CAF50' },
-    stopButton: { backgroundColor: '#F44336' },
-    buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    markerContainer: {
-        backgroundColor: '#fff',
-        padding: 5,
+    statusCard: {
+        marginBottom: spacing.xl,
+        padding: spacing.lg,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    statusBadgeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    statusTitle: { ...typography.subtitle1, color: colors.text.primary },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: colors.background.subtle,
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        marginBottom: spacing.lg,
+    },
+    infoItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    infoLabel: { ...typography.caption, color: colors.text.secondary, marginBottom: 2 },
+    infoValue: { ...typography.subtitle2, color: colors.text.primary },
+    dividerVertical: {
+        width: 1,
+        height: '80%',
+        backgroundColor: colors.divider,
+    },
+    actionButton: {
+        width: '100%',
+    },
+    vehicleMarker: {
+        backgroundColor: colors.primary,
+        padding: 6,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: '#2196F3',
-        elevation: 3
+        borderColor: colors.text.inverse,
+        elevation: 5,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 4,
     },
-    markerEmoji: { fontSize: 24 }
+    destMarker: {
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
 });
+

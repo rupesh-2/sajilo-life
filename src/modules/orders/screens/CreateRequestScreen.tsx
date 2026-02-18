@@ -1,10 +1,16 @@
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useOrderStore } from '../../../core/store/orderStore';
 import { useRouter } from 'expo-router';
 import { createOrderApi } from '../services/ordersService';
 import { Order } from '../../../types/globalTypes';
+import { colors } from '../../../core/theme/colors';
+import { spacing, borderRadius } from '../../../core/theme/spacing';
+import { typography } from '../../../core/theme/typography';
+import { AppButton } from '../../shared/components/AppButton';
+import { AppCard } from '../../shared/components/AppCard';
+import { Ionicons } from '@expo/vector-icons';
 
 export const CreateRequestScreen = () => {
     const [recipient, setRecipient] = useState('');
@@ -16,12 +22,12 @@ export const CreateRequestScreen = () => {
 
     const handleSubmit = async () => {
         if (!recipient || !address || !contact) {
-            return Alert.alert('Error', 'Please fill all fields');
+            return Alert.alert('Missing Info', 'Please provide all required details to create a delivery request.');
         }
 
         const newOrder: Order = {
-            id: '', // Will be assigned by API or marked as pending
-            sender: 'Me (Current User)', // Mock sender
+            id: '',
+            sender: 'Me (Current User)',
             recipient,
             address,
             contact,
@@ -31,18 +37,16 @@ export const CreateRequestScreen = () => {
 
         setLoading(true);
         try {
-            // Attempt online creation
             const syncedOrder = await createOrderApi(newOrder);
             addOrder({ ...syncedOrder, isOffline: false });
-            Alert.alert('Success', 'Order created successfully!');
+            Alert.alert('Success', 'Your delivery request has been created!');
             router.back();
         } catch (error) {
-            // Fallback to offline
             console.log('Online creation failed, saving locally:', error);
             addPendingOrder(newOrder);
             Alert.alert(
-                'Offline',
-                'Network request failed. Order saved locally and will sync when online.',
+                'Saved Locally',
+                'Your request was saved for later sync as you are currently offline.',
                 [{ text: 'OK', onPress: () => router.back() }]
             );
         } finally {
@@ -51,87 +55,161 @@ export const CreateRequestScreen = () => {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Text style={styles.backText}>←</Text>
+                    <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.title}>New Delivery Request</Text>
+                <Text style={styles.title}>New Delivery</Text>
             </View>
 
-            <View style={styles.form}>
-                <Text style={styles.label}>Recipient Name</Text>
-                <TextInput
-                    style={styles.input}
-                    value={recipient}
-                    onChangeText={setRecipient}
-                    placeholder="Enter recipient name"
-                />
+            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+                <View style={styles.form}>
+                    <Text style={styles.sectionTitle}>Recipient Details</Text>
 
-                <Text style={styles.label}>Delivery Address</Text>
-                <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={address}
-                    onChangeText={setAddress}
-                    placeholder="Enter full address"
-                    multiline
-                    numberOfLines={3}
-                />
+                    <AppCard variant="flat" style={styles.inputContainer}>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="person-outline" size={20} color={colors.primary} style={styles.inputIcon} />
+                            <View style={styles.inputContent}>
+                                <Text style={styles.inputLabel}>Recipient Name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={recipient}
+                                    onChangeText={setRecipient}
+                                    placeholder="Who are we delivering to?"
+                                    placeholderTextColor={colors.text.hint}
+                                />
+                            </View>
+                        </View>
+                    </AppCard>
 
-                <Text style={styles.label}>Contact Information</Text>
-                <TextInput
-                    style={styles.input}
-                    value={contact}
-                    onChangeText={setContact}
-                    placeholder="Enter phone number"
-                    keyboardType="phone-pad"
-                />
+                    <AppCard variant="flat" style={styles.inputContainer}>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="call-outline" size={20} color={colors.primary} style={styles.inputIcon} />
+                            <View style={styles.inputContent}>
+                                <Text style={styles.inputLabel}>Contact Number</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={contact}
+                                    onChangeText={setContact}
+                                    placeholder="How can we reach them?"
+                                    placeholderTextColor={colors.text.hint}
+                                    keyboardType="phone-pad"
+                                />
+                            </View>
+                        </View>
+                    </AppCard>
 
-                <TouchableOpacity
-                    style={[styles.button, loading && styles.disabledButton]}
-                    onPress={handleSubmit}
-                    disabled={loading}
-                >
-                    <Text style={styles.buttonText}>
-                        {loading ? 'Creating...' : 'Create Request'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+                    <View style={styles.spacer} />
+                    <Text style={styles.sectionTitle}>Delivery Location</Text>
+
+                    <AppCard variant="flat" style={StyleSheet.flatten([styles.inputContainer, styles.textAreaCard])}>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="location-outline" size={20} color={colors.primary} style={styles.inputIcon} />
+                            <View style={styles.inputContent}>
+                                <Text style={styles.inputLabel}>Full Address</Text>
+                                <TextInput
+                                    style={[styles.input, styles.textArea]}
+                                    value={address}
+                                    onChangeText={setAddress}
+                                    placeholder="Building, street, and city..."
+                                    placeholderTextColor={colors.text.hint}
+                                    multiline
+                                    numberOfLines={4}
+                                />
+                            </View>
+                        </View>
+                    </AppCard>
+
+                    <View style={styles.footer}>
+                        <AppButton
+                            title={loading ? 'Creating Request...' : 'Create Delivery Request'}
+                            onPress={handleSubmit}
+                            loading={loading}
+                            size="lg"
+                            style={styles.submitButton}
+                        />
+                        <Text style={styles.helperText}>
+                            Available online and offline. Requests will sync automatically.
+                        </Text>
+                    </View>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1, backgroundColor: colors.background.paper },
     header: {
-        paddingTop: 60,
-        paddingHorizontal: 20,
-        paddingBottom: 20,
         flexDirection: 'row',
-        alignItems: 'center'
-    },
-    backButton: { marginRight: 15 },
-    backText: { fontSize: 24, fontWeight: 'bold' },
-    title: { fontSize: 22, fontWeight: 'bold' },
-    form: { padding: 20 },
-    label: { fontSize: 16, fontWeight: '600', marginBottom: 8, color: '#333' },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        marginBottom: 20,
-        backgroundColor: '#fafafa'
-    },
-    textArea: { height: 100, textAlignVertical: 'top' },
-    button: {
-        backgroundColor: '#2196F3',
-        padding: 16,
-        borderRadius: 10,
         alignItems: 'center',
-        marginTop: 10
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.divider,
     },
-    disabledButton: { backgroundColor: '#BDBDBD' },
-    buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+    backButton: {
+        padding: spacing.xs,
+        marginRight: spacing.md,
+    },
+    title: { ...typography.h2, color: colors.text.primary },
+    scrollContent: { flexGrow: 1 },
+    form: { padding: spacing.lg },
+    sectionTitle: {
+        ...typography.subtitle2,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: spacing.md,
+    },
+    inputContainer: {
+        marginBottom: spacing.md,
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.background.subtle,
+    },
+    textAreaCard: {
+        minHeight: 120,
+    },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    inputIcon: {
+        marginTop: 2,
+        marginRight: spacing.md,
+    },
+    inputContent: {
+        flex: 1,
+    },
+    inputLabel: {
+        ...typography.caption,
+        color: colors.text.secondary,
+        marginBottom: 2,
+    },
+    input: {
+        ...typography.body1,
+        color: colors.text.primary,
+        padding: 0,
+    },
+    textArea: {
+        textAlignVertical: 'top',
+        minHeight: 80,
+    },
+    spacer: { height: spacing.lg },
+    footer: {
+        marginTop: spacing.xl,
+        alignItems: 'center',
+    },
+    submitButton: {
+        width: '100%',
+    },
+    helperText: {
+        ...typography.caption,
+        color: colors.text.secondary,
+        marginTop: spacing.md,
+        textAlign: 'center',
+    },
 });
+
