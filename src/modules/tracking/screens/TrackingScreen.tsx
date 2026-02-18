@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, MapViewProps } from 'react-native-maps';
 import { useTrackingStore } from '../../../core/store/trackingStore';
 import { Coordinates } from '../../../types/globalTypes';
 

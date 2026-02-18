@@ -1,11 +1,11 @@
 
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
 class NetworkService {
     isOnline = true;
 
     constructor() {
-        NetInfo.addEventListener((state) => {
+        NetInfo.addEventListener((state: NetInfoState) => {
             this.isOnline = state.isConnected ?? false;
         });
     }

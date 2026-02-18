@@ -8,7 +8,7 @@ export const OrderItem = ({ order }: { order: Order }) => {
         <View style={styles.container}>
             <Text style={styles.title}>Order #{order.id}</Text>
             <Text>Total: ${order.total}</Text>
-            <Text>Status: {order.status}</Text>
+            <Text>Status: {order.deliveryStatus}</Text>
         </View>
     );
 };

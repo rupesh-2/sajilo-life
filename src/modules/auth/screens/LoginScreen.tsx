@@ -34,4 +34,6 @@ export const LoginScreen = () => {
             />
             <Button title="Login" onPress={handleLogin} />
             <Button title="Go to Signup" onPress={() => router.push("/(auth)/signup")} />
-        </V
+        </View>
+    );
+};

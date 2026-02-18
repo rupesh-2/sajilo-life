@@ -22,4 +22,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
     setUser: (user, token) => {
         set({ user, token });
-     
+        storage.set("token", token);
+    },
+    login: (user, token) => {
+        set({ user, token });
+        storage.set("token", token);
+    },
+    logout: () => {
+        set({ user: null, token: null });
+        storage.delete("token");
+    },
+}));

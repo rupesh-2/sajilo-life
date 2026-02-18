@@ -14,4 +14,12 @@ const signup = async (email: string, password: string) => {
     return { user: userCredential.user, token };
 };
 
-con
+const logout = async () => {
+    await signOut(auth);
+};
+
+export const authService = {
+    login,
+    signup,
+    logout,
+};
